@@ -7,34 +7,36 @@
 </head>
 <body>
 
+//Navigation bar is a navigation bar
 <nav class="navigation-bar">
   <ul>
-    <li><a href="#skeleton">Video Example</a></li>
-    <li><a href="#movie">Moving Picture</a>  </li>
-    <li><a href="#">Video Example</a>        </li>
+    <li><a href="#mocap">Motion Capture</a></li>
+    <li><a href="#bayes">Bayesian Decoding</a>  </li>
   </ul>
 </nav>
 
 
-
-<section id="skeleton">
+// Motion Capture
+<section id="mocap">
   <div class="container-threejs" id="container-skeleton" ></div>
 </section>
 
-<section id="movie">
+<section id="bayes">
   <div class="container-threejs" id="container-movie" ></div>
 </section>
 
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three":         "./node_modules/three/build/three.module.js",
-        "orbitcontrols": "./node_modules/three/examples/jsm/controls/OrbitControls.js",
-        "keyboard":      "./js/THREEx.KeyboardState.js"
+<script type="importmap">
+  {
+    "imports": {
+      "three":         "./node_modules/three/build/three.module.js",
+      "orbitcontrols": "./node_modules/three/examples/jsm/controls/OrbitControls.js",
+      "keyboard":      "./js/THREEx.KeyboardState.js"
       }
     }
   </script>
+
+
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'orbitcontrols';
@@ -207,9 +209,8 @@
     // FUNCTIONS
     function init()
     {
-      // SCENE
       scene = new THREE.Scene();
-      // CAMERA
+
       var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
       var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
       camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
@@ -243,32 +244,16 @@
       light.position.set(0,250,0);
       scene.add(light);
 
-      // FLOOR
-      var floorTexture = new THREE.TextureLoader().load( './images/checkerboard.png' );
-      floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-      floorTexture.repeat.set( 10, 10 );
-      var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
-      var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-      var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-      floor.position.y = -0.5;
-      floor.rotation.x = Math.PI / 2;
-      scene.add(floor);
 
-      scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
-
-
-      ///////////
-      // VIDEO //
-      ///////////
-
-      // create the video element
+      // CREATE the video element
       video = document.createElement( 'video' );
       // video.id = 'video';
       // video.type = ' video/ogg; codecs="theora, vorbis" ';
 
       video.src = "./videos/rest_example.mp4";
       video.load(); // must call after setting/changing source
-      //video.play();
+      video.click();
+      video.play();
 
       // alternative method --
       // create DIV in HTML:
