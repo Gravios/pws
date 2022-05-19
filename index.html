@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>Graboski</title>
+  <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+
+
+  <div id="navigation-bar">
+    <ul>
+      <li><a href="./examplevideo.html">Video Example</a></li>
+      <li><a href="./movingpic.html">Moving Picture</a></li>
+      <li><a href="./examplevideo.html">Video Example</a></li>
+    </ul>
+  </div>
+  <div class="container-threejs" id="container" ></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three":         "./node_modules/three/build/three.module.js",
+        "orbitcontrols": "./node_modules/three/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'orbitcontrols';
+
+    function loadJSON() {
+      var xobj = new XMLHttpRequest();
+      xobj.overrideMimeType("application/json");
+      xobj.open('GET', './data/data.json', false); // Replace 'my_data' with the path to your file
+      xobj.send(null);
+      return JSON.parse(xobj.responseText);
+    }
+
+    // LOAD data from file
+    var xyz = loadJSON();
+
+    // LOAD from vsk file
+    var markersColor = [];
+    markersColor.push(0x0000ff);
+    markersColor.push(0x0000ff);
+    markersColor.push(0x0000ff);
+    markersColor.push(0x0000ff);
+    markersColor.push(0x0000ff);
+    markersColor.push(0x00ff00);
+    markersColor.push(0xff00ff);
+    markersColor.push(0xff0000);
+    markersColor.push(0x0000ff);
+
+
+    // Threejs stuff
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera( 75,window.innerWidth / window.innerHeight, 1,1500);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+    renderer.shadowMap.enabled       = true;
+    renderer.shadowMap.type          = THREE.PCFSoftShadowMap;
+
+    // RETRIEVE the threejs renderer containing div
+    var container = document.getElementById( "container" );
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    document.body.appendChild( container );
+    // ADD the threejs renderer to the div
+    container.appendChild( renderer.domElement );
+
+
+    const ambiLight = new THREE.AmbientLight( 0x1f1f1f, 1); // soft white light
+    scene.add( ambiLight );
+    const light = new THREE.DirectionalLight(0xFFFFFF,1.0)
+    light.position.set( 100, 500, 0 );
+    light.target.position.set(0,0,0);
+    light.castShadow = true;
+    scene.add( light );
+    light.shadow.mapSize.width = 2048; // default
+    light.shadow.mapSize.height = 2048; // default
+    light.shadow.camera.near = 0.1; // default
+    light.shadow.camera.far = 1000; // default
+    light.shadow.camera.right = 500; // default
+    light.shadow.camera.left = -500;
+    light.shadow.camera.top = 500;
+    light.shadow.camera.bottom = -500;
+
+
+    // ADD arena
+    const geometry = new THREE.CylinderGeometry( 480,480,10, 64 );
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xdddddd,    // red (can also use a CSS color string here)
+      shininess: 10,
+      side: THREE.DoubleSide,
+    });
+    //const material = new THREE.MeshBasicMaterial( { color: 0xdfdfdf } );
+    const arena = new THREE.Mesh( geometry, material );
+    arena.rotateY(-1.57079632679);
+    arena.castShadow = false;
+    arena.receiveShadow = true;
+    scene.add( arena );
+
+    // MAKE marker
+    function generateMarker(color){
+      const geometry = new THREE.SphereGeometry(10,32,32);
+      const material = new THREE.MeshPhongMaterial({
+        color: color,    // red (can also use a CSS color string here)
+        shininess: 50,
+        side: THREE.DoubleSide,
+      });
+      const marker = new THREE.Mesh( geometry, material );
+      marker.castShadow = true; //default is false
+      marker.receiveShadow = true; //default
+      return marker;
+    }
+
+    // ADD markers
+    var markers = [];
+    for (let mar=0;mar<9;mar++) {
+      markers[mar] = generateMarker(markersColor[mar]);
+      markers[mar].geometry.computeVertexNormals();
+      scene.add(markers[mar]);
+    }
+
+    // ADD line structure to aid visual orientation
+    const materialLine = new THREE.LineBasicMaterial( { color: 0x0000ff });
+    const points = [];
+    points.push( new THREE.Vector3( -30,0,0));
+    points.push( new THREE.Vector3( 0,30,0));
+    points.push( new THREE.Vector3( 30,0,0));
+    const geometryLine = new THREE.BufferGeometry().setFromPoints( points );
+    const line = new THREE.Line( geometryLine, materialLine );
+    scene.add( line );
+
+
+
+
+    //camera.position.y = 300;
+    camera.position.z = 600;
+
+    //const helper = new THREE.CameraHelper( light.shadow.camera );
+    //scene.add( helper );
+    const controls = new OrbitControls( camera, renderer.domElement );
+    //controls.addEventListener('change',render);
+
+    function onWindowResize() {
+      // set the aspect ratio to match the new browser window aspect ratio
+      camera.aspect = container.clientWidth / container.clientHeight;
+      // update the camera's frustum
+      camera.updateProjectionMatrix();
+      // update the size of the renderer AND the canvas
+      renderer.setSize( container.clientWidth, container.clientHeight );
+    }
+    window.addEventListener( 'resize', onWindowResize );
+
+    
+    let ind = 0;
+    function updateSkeleton() {
+      ind = THREE.MathUtils.euclideanModulo(renderer.info.render.frame,xyz.length);
+      for (let mar=0; mar<9 ; mar++) {
+        markers[mar].position.set( xyz[ind].MarkerXYZ[mar*3+0],xyz[ind].MarkerXYZ[mar*3+1],xyz[ind].MarkerXYZ[mar*3+2]);
+        markers[mar].geometry.computeVertexNormals();
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame( animate );
+      updateSkeleton();
+      controls.update();
+      renderer.render( scene, camera );
+    };
+
+    animate();
+  </script>
+
+</body>
+</html>
