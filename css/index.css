@@ -16,11 +16,14 @@ body {
 ul {
   background-color: #000000;
   list-style-type: none;
-  margin: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
   overflow: hidden;
   padding: 0;
   position: fixed;
-  top: 10%;
+  top: 0;
   right: 0;
   height:100%;
   width: 100px;
